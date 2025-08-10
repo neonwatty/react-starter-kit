@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react"
+import { Head, Link } from "@inertiajs/react"
 import { format, isSameDay } from "date-fns"
 import {
   Calendar as CalendarIcon,
@@ -10,6 +10,7 @@ import {
   Copy,
   Edit,
   Heart,
+  Home,
   Info,
   Plus,
   Search,
@@ -92,6 +93,7 @@ import {
 
 // Mock data
 import { tasks } from "@/data/dashboard-mock-data"
+import { rootPath } from "@/routes"
 
 const achievements = [
   { id: 1, title: "Early Bird", description: "Complete 5 tasks before 9 AM", icon: "🌅", color: "bg-gradient-to-r from-yellow-400 to-orange-500", progress: 3, total: 5 },
@@ -241,6 +243,23 @@ export default function EnhancedDashboardSection() {
     <TooltipProvider>
     <div className="space-y-6 p-4">
       <Head title="Enhanced Productivity Dashboard" />
+
+      {/* Home Button */}
+      <div className="flex justify-start">
+        <Link href={rootPath()}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => {
+              toast.info("🏠 Returning to home page (Inertia.js Link + shadcn/ui Button)")
+            }}
+          >
+            <Home className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Button>
+        </Link>
+      </div>
 
       {/* Command Palette */}
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>

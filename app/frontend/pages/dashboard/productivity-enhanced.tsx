@@ -603,6 +603,25 @@ export default function EnhancedDashboardSection() {
             </CardHeader>
             <CollapsibleContent>
               <CardContent>
+            {/* Calendar Legend */}
+            <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs font-medium mb-2">Calendar Legend:</p>
+              <div className="flex flex-wrap gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full" />
+                  <span>Urgent Tasks</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full" />
+                  <span>High Priority</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <span>Normal Tasks</span>
+                </div>
+              </div>
+            </div>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button 
@@ -623,15 +642,28 @@ export default function EnhancedDashboardSection() {
                   onSelect={(newDate) => {
                     setDate(newDate)
                     if (newDate) {
-                      toast.info("📅 Date selected (shadcn/ui Calendar component)")
+                      const tasksCount = tasksWithDates[format(newDate, "yyyy-MM-dd")]?.length || 0
+                      if (tasksCount > 0) {
+                        toast.info(`📅 ${tasksCount} task${tasksCount > 1 ? 's' : ''} on ${format(newDate, "MMM dd")}`)
+                      } else {
+                        toast.info("📅 No tasks on this date")
+                      }
                     }
                   }}
                   initialFocus
                   modifiers={{
-                    hasTasks: Object.keys(tasksWithDates).map(d => new Date(d))
+                    hasTasks: Object.keys(tasksWithDates).map(d => new Date(d)),
+                    hasUrgentTasks: Object.entries(tasksWithDates)
+                      .filter(([_, tasks]) => tasks.some(t => t.priority === "urgent"))
+                      .map(([date]) => new Date(date)),
+                    hasHighPriorityTasks: Object.entries(tasksWithDates)
+                      .filter(([_, tasks]) => tasks.some(t => t.priority === "high"))
+                      .map(([date]) => new Date(date))
                   }}
                   modifiersClassNames={{
-                    hasTasks: "bg-blue-100 dark:bg-blue-900 font-bold"
+                    hasTasks: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-blue-500 after:rounded-full",
+                    hasUrgentTasks: "bg-red-100 dark:bg-red-900/30 font-bold text-red-700 dark:text-red-300",
+                    hasHighPriorityTasks: "bg-orange-100 dark:bg-orange-900/30 font-semibold"
                   }}
                 />
               </PopoverContent>
@@ -639,8 +671,26 @@ export default function EnhancedDashboardSection() {
 
             {/* Tasks for selected date */}
             <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Tasks for {date && format(date, "MMM dd, yyyy")}</h4>
-              {tasksForDate.length > 0 ? (
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-sm">
+                  {date ? (
+                    <>Tasks for {format(date, "MMM dd, yyyy")} ({tasksForDate.length})</>
+                  ) : (
+                    "Select a date to view tasks"
+                  )}
+                </h4>
+                {date && tasksForDate.length > 0 && (
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {tasksForDate.filter(t => t.priority === "urgent").length} Urgent
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {tasksForDate.filter(t => t.priority === "high").length} High
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              {date && tasksForDate.length > 0 ? (
                 tasksForDate.map(task => (
                   <ContextMenu key={task.id}>
                     <ContextMenuTrigger>
@@ -732,8 +782,24 @@ export default function EnhancedDashboardSection() {
                     </ContextMenuContent>
                   </ContextMenu>
                 ))
+              ) : date ? (
+                <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                  <CalendarIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">No tasks scheduled for {format(date, "MMM dd, yyyy")}</p>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => toast.success("Add task feature coming soon!")}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add a task for this date
+                  </Button>
+                </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No tasks for this date</p>
+                <div className="text-center py-8 border rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">Click on a date in the calendar to view tasks</p>
+                </div>
               )}
             </div>
               </CardContent>
